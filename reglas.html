@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reglas del Juego</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #14121f, #080510);
+      overflow: hidden;
+      font-family: "Poppins", sans-serif;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .math-symbol {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.08);
+      font-size: calc(18px + 2vw);
+      animation: float 12s linear infinite;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 20px;
+      color: #ffffff;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.2);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 35px;
+      font-size: 1.1rem;
+      line-height: 1.8;
+      max-width: 700px;
+    }
+
+    ul li::before {
+      content: "✦ ";
+      color: #ffffff;
+      opacity: 0.7;
+    }
+
+    .highlight {
+      color: #ffffff;
+      font-style: italic;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #3b82f6, #9333ea);
+      border: none;
+      color: #fff;
+      font-size: 1rem;
+      padding: 12px 25px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn:hover {
+      transform: scale(1.07);
+      background: linear-gradient(135deg, #4f9ef8, #a855f7);
+    }
+
+    #dev-btn {
+      position: fixed;
+      bottom: 15px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #fff;
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    #dev-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    #dev-info {
+      position: fixed;
+      bottom: 55px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      color: #fff;
+      text-align: left;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+      line-height: 1.6;
+    }
+
+    #dev-info.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📖 Reglas del Juego</h1>
+  <ul>
+    <li>Convierte correctamente las fracciones a <span class="highlight">fracciones continuas</span> o viceversa.</li>
+    <li>Obtén <span class="highlight">1 punto</span> por cada respuesta correcta y puntos extra por letras adivinadas.</li>
+    <li>Descifra la <span class="highlight">palabra secreta</span> combinando tus respuestas.</li>
+    <li>para descifrar la<span class="highlight">letra</span> suma numerador con denominador el valor sera la posicion de la letra en el abecedario es decir 1=A.</li>
+    <li>Cuando la <span class="highlight">fraccion continua quede en 1/1</span> su posicion sera 1</li>
+    <li>Tienes hasta <span class="highlight">20 puntos</span> para lograr la victoria. 🎯</li>
+    <li>Pulsa <span class="highlight">Enter</span> o haz clic para comenzar.</li>
+  </ul>
+  <button class="btn" id="startGameBtn">Comenzar Juego</button>
+
+  <button id="dev-btn">Dev</button>
+  <div id="dev-info">
+    Créditos del proyecto<br><br>
+    👨‍💻 Programador: Sebastián Aguilar<br>
+    🎨 Diseño: Sebastián Aguilar<br>
+    💡 Colaboradores: Ángel Santiago, Valentina Sandoval, Mariana Marin
+  </div>
+
+  <script>
+    const symbols = ["π", "Σ", "∫", "√", "∞", "≈", "θ", "Δ", "φ", "∑", "∂", "λ"];
+    for (let i = 0; i < 25; i++) {
+      const span = document.createElement("span");
+      span.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      span.classList.add("math-symbol");
+      span.style.left = Math.random() * 100 + "vw";
+      span.style.animationDelay = Math.random() * 10 + "s";
+      document.body.appendChild(span);
+    }
+
+    const startGameBtn = document.getElementById("startGameBtn");
+    startGameBtn.addEventListener("click", () => {
+      window.location.href = "juego.html";
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        startGameBtn.click();
+      }
+    });
+
+    const devBtn = document.getElementById("dev-btn");
+    const devInfo = document.getElementById("dev-info");
+    devBtn.addEventListener("click", () => {
+      devInfo.classList.toggle("show");
+    });
+  </script>
+
+</body>
+</html>
+

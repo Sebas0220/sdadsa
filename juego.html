@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desafío de Fracciones Continuas</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #0a0a23, #000); color: white; text-align: center; height: 100vh; overflow: hidden; }
+        .container { position: relative; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.08); padding: 40px; border-radius: 25px; backdrop-filter: blur(10px); width: 600px; margin: auto; box-shadow: 0 0 40px rgba(255, 255, 255, 0.15); }
+        h1 { font-size: 2.3rem; margin-bottom: 15px; }
+        .score-row { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 20px; opacity: 0.9; }
+        .fraction-box { background: rgba(255,255,255,0.1); padding: 18px 35px; border-radius: 15px; display: inline-block; font-size: 2rem; margin: 20px 0; }
+        input { display: block; width: 90%; padding: 14px; margin: 10px auto; border: none; border-radius: 10px; background: rgba(255, 255, 255, 0.1); color: white; text-align: center; font-size: 1.1rem; }
+        input:disabled { opacity: 0.5; }
+        button { background: linear-gradient(to right, #4e00c2, #9b00ff); color: white; border: none; padding: 14px 28px; border-radius: 12px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        button:hover { transform: scale(1.05); }
+        .message { margin-top: 10px; font-size: 1.1rem; min-height: 30px; }
+        .correct { color: #72ff8f; }
+        .wrong { color: #ff7272; }
+        .hidden { display: none; }
+        #final { margin-top: 15px; font-size: 1.05rem; }
+        .floating-symbol { position: absolute; font-size: 1.6rem; opacity: 0.1; animation: float 10s linear infinite; color: #fff; }
+        @keyframes float { from { transform: translateY(100vh); } to { transform: translateY(-10vh); } }
+
+        /* 💡 Estilo de la alerta modal */
+        #mobileAlert {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        #mobileAlertBox {
+            background: linear-gradient(135deg, #4e00c2, #9b00ff);
+            color: white;
+            padding: 25px 35px;
+            border-radius: 20px;
+            box-shadow: 0 0 25px rgba(255,255,255,0.3);
+            max-width: 300px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        #mobileAlertBox h3 { margin-bottom: 10px; font-size: 1.3rem; }
+        #mobileAlertBox button {
+            background: white;
+            color: #4e00c2;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #mobileAlertBox button:hover { transform: scale(1.05); }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div id="symbols"></div>
+    <div class="container">
+        <h1>📘 Desafío de Fracciones Continuas</h1>
+        <div class="score-row">
+            <span id="score">Puntaje: 0 / 20</span>
+            <span id="progress">Fracción 1 / 10</span>
+        </div>
+        <h3 id="hint">Convierte correctamente según el tipo.</h3>
+        <div id="fraction" class="fraction-box"></div>
+        <p id="instruction"></p>
+        <input id="answer" placeholder="Escribe tu respuesta (ej. [1;1,4] o 9/5)" />
+        <input id="letter" placeholder="Escribe la letra" class="hidden" maxlength="1" />
+        <button id="check">Comprobar</button>
+        <div class="message" id="msg"></div>
+        <div id="final" class="hidden"></div>
+    </div>
+
+    <script>
+        const phrases = ["RACIONAL","IRRACIONAL","FRACCIONES","NUMERO","DECIMAL","ALGEBRA","COCIENTE","CONTINUA"];
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let secretWord = "";
+        let fractions = [];
+        let current = 0;
+        let score = 0;
+        const fractionEl = document.getElementById("fraction");
+        const answerEl = document.getElementById("answer");
+        const letterEl = document.getElementById("letter");
+        const checkBtn = document.getElementById("check");
+        const msgEl = document.getElementById("msg");
+        const scoreEl = document.getElementById("score");
+        const progressEl = document.getElementById("progress");
+        const finalEl = document.getElementById("final");
+        const instructionEl = document.getElementById("instruction");
+
+        function toContinuedFraction(numer, denom) {
+            let a = [];
+            let n = numer, d = denom;
+            while (d !== 0) {
+                const q = Math.floor(n / d);
+                a.push(q);
+                const r = n - q * d;
+                n = d;
+                d = r;
+            }
+            if (a.length === 1) return `[${a[0]}]`;
+            const head = a[0], tail = a.slice(1).join(",");
+            return `[${head};${tail}]`;
+        }
+
+        function parseContinuedInputToArray(text) {
+            if (!text) return null;
+            text = text.trim().replace(/\(/g,'[').replace(/\)/g,']');
+            const m = text.match(/-?\d+/g);
+            if (!m) return null;
+            return m.map(x => parseInt(x,10));
+        }
+
+        function normalizeCFString(text) {
+            const arr = parseContinuedInputToArray(text);
+            if (!arr) return null;
+            if (arr.length === 1) return `[${arr[0]}]`;
+            return `[${arr[0]};${arr.slice(1).join(",")}]`;
+        }
+
+        function compareAnswers(userRaw, expected) {
+            const user = (userRaw||"").trim().replace(/\s+/g, '');
+            const exp = (expected||"").trim();
+            if (/^\d+\/\d+$/.test(exp)) {
+                if (!/^\d+\/\d+$/.test(user)) return false;
+                const [uNum, uDen] = user.split('/').map(Number);
+                const [eNum, eDen] = exp.split('/').map(Number);
+                return uNum*eDen === eNum*uDen;
+            }
+            if (/^\[\d+;.*\]$/.test(exp) || /^\[\d+\]$/.test(exp)) {
+                const normUser = normalizeCFString(user);
+                const normExp = normalizeCFString(exp);
+                if (!normUser) return false;
+                return normUser === normExp;
+            }
+            return user === exp;
+        }
+
+        function generateFractionsFromWord(word) {
+            return word.split("").map((letter, idx) => {
+                const pos = alphabet.indexOf(letter) + 1;
+                let num, den;
+                if (pos > 1) {
+                    const maxDen = Math.floor((pos - 1) / 2);
+                    if (maxDen >= 1) {
+                        den = Math.floor(Math.random() * maxDen) + 1;  // 1 a maxDen
+                        num = pos - den;  // Asegura num > den
+                    } else {  // pos = 2
+                        num = 1;
+                        den = 1;  // Suma = 2
+                    }
+                } else {  // pos = 1
+                    num = 1;
+                    den = 1;  // Suma = 2 (mejor caso posible)
+                }
+                const isContinued = (idx % 2 === 1);
+                let display, correctAnswer;
+                if (isContinued) {
+                    display = toContinuedFraction(num, den);
+                    correctAnswer = `${num}/${den}`;
+                } else {
+                    display = `${num}/${den}`;
+                    correctAnswer = toContinuedFraction(num, den);
+                }
+                return { letter, num, den, display, correctAnswer, isContinued };
+            });
+        }
+
+        function randomWord() {
+            secretWord = phrases[Math.floor(Math.random()*phrases.length)];
+            fractions = generateFractionsFromWord(secretWord);
+            current = 0;
+            score = 0;
+            updateUI();
+        }
+
+        function updateUI() {
+            if (current >= fractions.length) return finishGame();
+            const f = fractions[current];
+            fractionEl.textContent = f.display;
+            progressEl.textContent = `Fracción ${current+1} / ${fractions.length}`;
+            scoreEl.textContent = `Puntaje: ${score} / 20`;
+            answerEl.value = "";
+            letterEl.value = "";
+            letterEl.classList.add('hidden');
+            answerEl.disabled = false;
+            msgEl.textContent = "";
+            instructionEl.textContent = f.isContinued ? "Convierte la fracción continua a una fracción normal (a/b):" : "Convierte la fracción normal a una fracción continua (usa [a;b,c]):";
+            checkBtn.textContent = "Comprobar";
+        }
+
+        function submitFraction() {
+            const f = fractions[current];
+            const userRaw = answerEl.value.trim();
+            if (!userRaw) {
+                msgEl.textContent = "Escribe tu respuesta primero.";
+                msgEl.className = "message wrong";
+                return;
+            }
+            const ok = compareAnswers(userRaw, f.correctAnswer);
+            if (ok) {
+                score++;
+                scoreEl.textContent = `Puntaje: ${score} / 20`;
+                msgEl.textContent = "✅ ¡Fracción correcta! Ahora ingresa la letra.";
+                msgEl.className = "message correct";
+                letterEl.classList.remove('hidden');
+                answerEl.disabled = true;
+                checkBtn.textContent = "Enviar letra";
+                setTimeout(()=> letterEl.focus(), 50);
+            } else {
+                msgEl.textContent = `❌ Fracción incorrecta. Pierdes la letra (${f.letter}).`;
+                msgEl.className = "message wrong";
+                current++;
+                setTimeout(updateUI, 1000);
+            }
+        }
+
+        function submitLetter() {
+            const f = fractions[current];
+            const userL = letterEl.value.trim().toUpperCase();
+            if (!userL) {
+                msgEl.textContent = "Escribe una letra (A-Z) y pulsa Enviar.";
+                msgEl.className = "message wrong";
+                return;
+            }
+            if (userL === f.letter) {
+                score++;
+                msgEl.textContent = `🎉 Letra correcta (${f.letter}) — +1 punto.`;
+                msgEl.className = "message correct";
+            } else {
+                msgEl.textContent = `❌ Letra incorrecta. Era ${f.letter}.`;
+                msgEl.className = "message wrong";
+            }
+            scoreEl.textContent = `Puntaje: ${score} / 20`;
+            current++;
+            setTimeout(updateUI, 900);
+        }
+
+        function checkAnswerHandler() {
+            if (!letterEl.classList.contains('hidden') && answerEl.disabled) submitLetter();
+            else submitFraction();
+        }
+
+        checkBtn.addEventListener('click', checkAnswerHandler);
+
+        function finishGame() {
+            fractionEl.textContent = "✨ Fin del juego ✨";
+            answerEl.classList.add('hidden');
+            letterEl.classList.add('hidden');
+            checkBtn.classList.add('hidden');
+            msgEl.textContent = "";
+            finalEl.innerHTML = `<p>Escribe la palabra que crees que es:</p><input id="finalGuess" placeholder="Palabra secreta" /><button id="checkFinal">Comprobar palabra</button>`;
+            finalEl.classList.remove('hidden');
+            document.getElementById('checkFinal').onclick = () => {
+                const guess = document.getElementById('finalGuess').value.trim().toUpperCase();
+                if (!guess) return;
+                if (guess === secretWord) {
+                    const missing = 20 - score;
+                    score += missing;
+                    if (score > 20) score = 20;
+                    finalEl.innerHTML += `<p class='correct'>🎉 ¡Adivinaste la palabra! +${missing} puntos (Total: ${score}/20)</p>`;
+                } else {
+                    finalEl.innerHTML += `<p class='wrong'>❌ Palabra incorrecta. Era <strong>${secretWord}</strong>.</p>`;
+                }
+                const listHtml = fractions.map((f, i) => `<strong>${i+1}.</strong> ${f.display} → ${f.correctAnswer} → ${f.letter}`).join('<br>');
+                finalEl.innerHTML += `<p><strong>Soluciones:</strong></p><p style="text-align:left;margin:10px auto;width:90%">${listHtml}</p><br><button id='restart'>Reiniciar</button>`;
+                document.getElementById('restart').onclick = restart;
+                scoreEl.textContent = `Puntaje: ${score} / 20`;
+            };
+        }
+
+        function restart() {
+            finalEl.classList.add('hidden');
+            answerEl.classList.remove('hidden');
+            letterEl.classList.add('hidden');
+            checkBtn.classList.remove('hidden');
+            randomWord();
+        }
+
+        randomWord();
+        const symbols = ['∞','÷','×','+','-','=','π','√'];
+        const symbolsDiv = document.getElementById("symbols");
+        for (let i = 0; i < 20; i++) {
+            const s = document.createElement("div");
+            s.classList.add("floating-symbol");
+            s.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+            s.style.left = Math.random()*100 + "vw";
+            s.style.animationDuration = 8 + Math.random()*8 + "s";
+            symbolsDiv.appendChild(s);
+        }
+
+        // 💬 Mostrar alerta solo en móviles
+        if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            const alertDiv = document.createElement("div");
+            alertDiv.id = "mobileAlert";
+            alertDiv.innerHTML = `
+                <div id="mobileAlertBox">
+                    <h3>📱 Modo escritorio recomendado</h3>
+                    <p>Para una mejor visualización del juego,<br>activa el <strong>modo escritorio</strong> en tu navegador.</p>
+                    <button onclick="document.getElementById('mobileAlert').remove()">Entendido</button>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Juego: Fracciones continuas — Inicio</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,Arial,sans-serif;
+    color:#fff;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    overflow:hidden;
+    background:radial-gradient(circle at 30% 30%, #2b1055, #000);
+  }
+
+  .symbols{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    pointer-events:none;
+  }
+
+  .symbol{
+    position:absolute;
+    color:rgba(255,255,255,0.15);
+    font-size:clamp(20px, 2vw, 40px);
+    font-weight:bold;
+    animation: float 15s linear infinite;
+  }
+
+  @keyframes float {
+    0% {transform: translateY(110vh) rotate(0deg);}
+    100% {transform: translateY(-10vh) rotate(360deg);}
+  }
+
+  h1{
+    font-size:clamp(28px,4vw,48px);
+    text-shadow:2px 2px 8px rgba(0,0,0,0.7);
+    margin-bottom:20px;
+  }
+
+  .lead{
+    font-size:1.2rem;
+    text-shadow:1px 1px 4px rgba(0,0,0,0.6);
+    margin-bottom:40px;
+  }
+
+  .start-btn{
+    background:linear-gradient(90deg,#3b82f6,#9333ea);
+    border:none;
+    color:#fff;
+    font-weight:700;
+    font-size:1.2rem;
+    padding:14px 32px;
+    border-radius:12px;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,0.4);
+    transition:transform .2s, box-shadow .2s;
+  }
+
+  .start-btn:hover{
+    transform:scale(1.05);
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  #game-card {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from {opacity:0; transform: translateY(20px);}
+    to {opacity:1; transform: translateY(0);}
+  }
+
+  #backBtn{
+    background:linear-gradient(90deg,#e0e7ff,#a78bfa);
+    color:#1e1e2f;
+    border:none;
+    font-weight:700;
+    font-size:1.1rem;
+    padding:12px 28px;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    transition:transform .2s, box-shadow .2s;
+    margin-top:20px;
+  }
+
+  #backBtn:hover{
+    transform:scale(1.05);
+    box-shadow:0 6px 18px rgba(0,0,0,0.4);
+  }
+
+  #devBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: background 0.3s;
+    z-index: 10;
+  }
+
+  #devBtn:hover { background: rgba(255,255,255,0.3); }
+
+  #credits {
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    background: rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    width: 240px;
+    display: none;
+    text-align: left;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+  <div class="symbols" id="symbols"></div>
+
+  <div id="start-card">
+    <h1>¡Fracciones Continuas!</h1>
+    <p class="lead">Pon a prueba tus habilidades en matemáticas.</p>
+    <button class="start-btn" id="startBtn">Iniciar juego</button>
+  </div>
+
+  <div id="game-card" class="hidden">
+    <h1>¡Juego iniciado!</h1>
+    <p>Pronto aparecerán los desafíos y reglas del juego.</p>
+    <button id="backBtn">Volver</button>
+  </div>
+
+  <button id="devBtn">Dev</button>
+  <div id="credits">
+    <strong>Créditos del proyecto</strong><br><br>
+    👨‍💻 Programador: <b>Sebastián Aguilar</b><br>
+    🎨 Diseño: <b>Mariana Marín</b><br>
+    💡 Colaboradores: <b>Ángel Santiago</b>, <b>Valentina Sandoval</b>
+  </div>
+
+  <script>
+  const startBtn = document.getElementById('startBtn');
+  const backBtn = document.getElementById('backBtn');
+  const startCard = document.getElementById('start-card');
+  const gameCard = document.getElementById('game-card');
+  const symbols = document.getElementById('symbols');
+  const devBtn = document.getElementById('devBtn');
+  const credits = document.getElementById('credits');
+  const chars = ['π','∞','∑','√','∫','≈','∆','≤','≥','×','÷','∂','θ','Φ'];
+
+  for (let i = 0; i < 40; i++) {
+    const span = document.createElement('span');
+    span.className = 'symbol';
+    span.textContent = chars[Math.floor(Math.random() * chars.length)];
+    span.style.left = Math.random() * 100 + '%';
+    span.style.animationDelay = (Math.random() * 15) + 's';
+    span.style.fontSize = (20 + Math.random() * 40) + 'px';
+    symbols.appendChild(span);
+  }
+
+  function startGame() {
+    window.location.href = 'reglas.html';
+  }
+
+  function backToStart() {
+    window.location.href = 'index.html';
+  }
+
+  startBtn.addEventListener('click', startGame);
+  if (backBtn) backBtn.addEventListener('click', backToStart);
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (!startCard.classList.contains('hidden')) startGame();
+      else if (!gameCard.classList.contains('hidden')) backToStart();
+    }
+  });
+
+  if (devBtn) {
+    devBtn.addEventListener('click', () => {
+      credits.style.display = (credits.style.display === 'block') ? 'none' : 'block';
+    });
+  }
+</script>
+
+</body>
+</html>
